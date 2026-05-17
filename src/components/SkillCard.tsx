@@ -29,9 +29,11 @@ const DESC_PREVIEW_LINES = 3;
 export function SkillCard({
   skill,
   onDeleted,
+  enabledAgentIds = [],
 }: {
   skill: InstalledSkill;
   onDeleted?: () => void;
+  enabledAgentIds?: string[];
 }) {
   const [deleting, setDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -154,7 +156,7 @@ export function SkillCard({
 
         <div className="min-h-[5.5rem] shrink-0">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Works with</p>
-          <AgentBadgeList agentIds={skill.compatibleAgentIds} />
+          <AgentBadgeList agentIds={skill.compatibleAgentIds} enabledAgentIds={enabledAgentIds} />
         </div>
 
         <div className="mt-auto space-y-1 border-t-[3px] border-on-background pt-4 font-mono text-xs text-on-surface-variant">

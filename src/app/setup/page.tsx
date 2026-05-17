@@ -137,11 +137,6 @@ export default function SetupPage() {
                   )}
                 </div>
                 <h3 className="text-lg font-bold">{agent.name}</h3>
-                {on && (
-                  <span className="mt-2 inline-block border-2 border-on-primary/40 px-3 py-0.5 text-[10px] font-bold uppercase">
-                    Selected
-                  </span>
-                )}
               </button>
             </li>
           );

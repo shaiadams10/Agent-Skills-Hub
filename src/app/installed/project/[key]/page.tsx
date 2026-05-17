@@ -53,7 +53,7 @@ export default async function ProjectLibraryPage(props: PageProps) {
           No SKILL.md installs found for this project yet.
         </p>
       ) : (
-        <ProjectSkillsGrid skills={skills} />
+        <ProjectSkillsGrid skills={skills} enabledAgentIds={settings.enabledAgentIds} />
       )}
     </div>
   );

@@ -38,9 +38,8 @@ internal static class Program
                 return null;
 
             dialog = (IFileDialog)Activator.CreateInstance(dialogType);
-            uint options;
-            dialog.GetOptions(out options);
-            dialog.SetOptions(options | FosPickFolders | FosForceFilesystem | FosPathMustExist);
+            // Replace options entirely — OR with defaults keeps FOS_FILEMUSTEXIST and forces file pick.
+            dialog.SetOptions(FosPickFolders | FosForceFilesystem | FosPathMustExist);
             dialog.SetTitle(title);
 
             if (dialog.Show(IntPtr.Zero) != 0)

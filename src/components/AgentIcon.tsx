@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { displayCompatibleAgentIds } from "@/lib/agents/filter-display-agents";
 import { getAgentById } from "@/lib/agents/registry";
 
 export function AgentIcon({
@@ -54,16 +55,63 @@ export function AgentBadge({ agentId }: { agentId: string }) {
   );
 }
 
-export function AgentBadgeList({ agentIds }: { agentIds: string[] }) {
-  if (agentIds.length === 0) return null;
+const DEFAULT_MAX_VISIBLE = 4;
+
+export function AgentBadgeList({
+  agentIds,
+  enabledAgentIds = [],
+  maxVisibleWhenUnfiltered = DEFAULT_MAX_VISIBLE,
+}: {
+  agentIds: string[];
+  enabledAgentIds?: string[];
+  maxVisibleWhenUnfiltered?: number;
+}) {
+  const displayIds = displayCompatibleAgentIds(agentIds, enabledAgentIds);
+  if (displayIds.length === 0) return null;
+
+  const useOverflow = enabledAgentIds.length === 0 && displayIds.length > maxVisibleWhenUnfiltered;
+  const visibleIds = useOverflow ? displayIds.slice(0, maxVisibleWhenUnfiltered) : displayIds;
+  const overflowIds = useOverflow ? displayIds.slice(maxVisibleWhenUnfiltered) : [];
 
   return (
-    <div className="flex flex-wrap gap-1.5" role="list" aria-label="Works with">
-      {agentIds.map((id) => (
+    <div className="flex flex-wrap items-center gap-1.5" role="list" aria-label="Works with">
+      {visibleIds.map((id) => (
         <span key={id} role="listitem">
           <AgentBadge agentId={id} />
         </span>
       ))}
+      {overflowIds.length > 0 && <OverflowAgentBadges agentIds={overflowIds} />}
     </div>
+  );
+}
+
+function OverflowAgentBadges({ agentIds }: { agentIds: string[] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <span className="relative inline-flex" role="listitem">
+      <button
+        type="button"
+        aria-label={`${agentIds.length} more compatible tools`}
+        aria-expanded={open}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="inline-flex h-8 min-w-8 items-center justify-center border-[3px] border-on-background bg-surface-container-high px-2 text-xs font-bold uppercase text-on-surface shadow-brutal"
+      >
+        ···
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute bottom-full left-0 z-50 mb-2 flex max-w-[14rem] flex-col gap-1.5 border-[3px] border-on-background bg-surface-container-lowest p-3 shadow-brutal"
+        >
+          {agentIds.map((id) => (
+            <AgentBadge key={id} agentId={id} />
+          ))}
+        </span>
+      )}
+    </span>
   );
 }

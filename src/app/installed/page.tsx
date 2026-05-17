@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SkillCard } from "@/components/SkillCard";
-import { SkillCardGrid } from "@/components/SkillCardGrid";
+import { ExpandableRevealGrid } from "@/components/motion/ExpandableRevealGrid";
 import { AddProjectModal } from "@/components/AddProjectModal";
 import { CollapsibleSkillSection } from "@/components/CollapsibleSkillSection";
 import {
@@ -192,11 +192,14 @@ export default function InstalledPage() {
             {data.global.length === 0 ? (
               <EmptyHint message="No global skills yet. Try ~/.cursor/skills or ~/.agents/skills." />
             ) : (
-              <SkillCardGrid>
-                {data.global.map((skill) => (
-                  <SkillCard key={skill.id} skill={skill} onDeleted={() => load(false)} />
-                ))}
-              </SkillCardGrid>
+              <ExpandableRevealGrid
+                items={data.global}
+                initialCount={3}
+                getKey={(skill) => skill.id}
+                renderItem={(skill) => (
+                  <SkillCard skill={skill} onDeleted={() => load(false)} />
+                )}
+              />
             )}
           </CollapsibleSkillSection>
 
@@ -212,16 +215,19 @@ export default function InstalledPage() {
             {data.projects.length === 0 ? (
               <EmptyHint message="Click Add project to watch a repo and scan its skill folders." />
             ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {data.projects.map((proj) => (
+              <ExpandableRevealGrid
+                items={data.projects}
+                initialCount={3}
+                getKey={(proj) => proj.path}
+                showMoreLabel={(n) => `Show ${n} more libraries`}
+                renderItem={(proj) => (
                   <ProjectLibraryCard
-                    key={proj.path}
                     path={proj.path}
                     label={proj.label}
                     skillCount={proj.skills.length}
                   />
-                ))}
-              </div>
+                )}
+              />
             )}
           </CollapsibleSkillSection>
         </>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AgentBadgeList } from "@/components/AgentIcon";
 import { SkillDetailDeleteButton } from "@/components/SkillDetailActions";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { loadSettings } from "@/lib/settings/store";
 import { readSkillDetail } from "@/lib/skills/read-skill-detail";
 import { decodeSkillPathKey } from "@/lib/skills/skill-path-key";
 import { InstallOriginBadge } from "@/components/InstallOriginBadge";
@@ -32,6 +33,8 @@ export default async function SkillDetailPage(props: PageProps) {
   } catch {
     notFound();
   }
+
+  const settings = await loadSettings();
 
   let detail: Awaited<ReturnType<typeof readSkillDetail>>;
   try {
@@ -144,7 +147,10 @@ export default async function SkillDetailPage(props: PageProps) {
             </div>
             <div className="p-6">
               {detail.compatibleAgentIds.length > 0 ? (
-                <AgentBadgeList agentIds={detail.compatibleAgentIds} />
+                <AgentBadgeList
+                  agentIds={detail.compatibleAgentIds}
+                  enabledAgentIds={settings.enabledAgentIds}
+                />
               ) : (
                 <p className="text-sm text-on-surface-variant">
                   No tool paths matched this location. Check{" "}
