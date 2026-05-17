@@ -15,6 +15,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo  Checking for a previous instance...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-hub.ps1"
+echo.
+
 if not exist "node_modules\" (
     echo  First run: installing dependencies ^(one time only^)...
     call npm install
@@ -22,6 +26,14 @@ if not exist "node_modules\" (
         echo  Install failed. Check your internet connection.
         pause
         exit /b 1
+    )
+)
+
+if not exist "src\lib\dialog\bin\pick-folder-win.exe" (
+    echo  Building Windows folder picker ^(one time^)...
+    call npm run build:picker
+    if errorlevel 1 (
+        echo  Folder picker build failed. Browse may not work until you run: npm run build:picker
     )
 )
 

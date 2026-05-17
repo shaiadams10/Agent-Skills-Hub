@@ -1,5 +1,7 @@
 # Windows folder picker (`pick-folder-win.exe`)
 
+Uses **WinForms `FolderBrowserDialog`** (reliable when spawned from the Node dev server). Earlier IFileOpenDialog COM builds exited instantly without showing UI.
+
 Native folder picker via `IFileOpenDialog` (`FOS_PICKFOLDERS`). Built from `FolderPicker.cs` with `csc.exe` (no Go/SDK).
 
 ```bash

@@ -13,6 +13,10 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "  Checking for a previous instance..."
+bash "$(dirname "$0")/scripts/stop-hub.sh"
+echo ""
+
 if [ ! -d "node_modules" ]; then
   echo "  First run: installing dependencies (one time only)..."
   npm install || { read -r -p "Press Enter to close..."; exit 1; }
