@@ -1,8 +1,8 @@
 # Windows folder picker (`pick-folder-win.exe`)
 
-Uses **WinForms `FolderBrowserDialog`** (reliable when spawned from the Node dev server). Earlier IFileOpenDialog COM builds exited instantly without showing UI.
+Uses the modern Windows shell folder picker through WinForms `FolderBrowserDialog` with `AutoUpgradeEnabled` when available. On current Windows this opens the “Open Folder” / “Select folder” style dialog.
 
-Native folder picker via `IFileOpenDialog` (`FOS_PICKFOLDERS`). Built from `FolderPicker.cs` with `csc.exe` (no Go/SDK).
+Built from `FolderPicker.cs` with `csc.exe` (no Go/SDK).
 
 ```bash
 npm run build:picker

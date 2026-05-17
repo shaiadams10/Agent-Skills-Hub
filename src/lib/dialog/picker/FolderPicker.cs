@@ -1,7 +1,8 @@
 using System;
+using System.Reflection;
 using System.Windows.Forms;
 
-/// <summary>Native folder picker. exit 0 + path on stdout; 1 = cancel/error.</summary>
+/// <summary>Modern Windows shell folder picker. exit 0 + path on stdout; 1 = cancel/error.</summary>
 internal static class Program
 {
     [STAThread]
@@ -14,8 +15,9 @@ internal static class Program
 
             using (var dialog = new FolderBrowserDialog())
             {
-                dialog.Description = "Select your project folder";
+                dialog.Description = "Open Folder";
                 dialog.ShowNewFolderButton = true;
+                EnableModernDialog(dialog);
 
                 if (dialog.ShowDialog() != DialogResult.OK)
                     return 1;
@@ -28,9 +30,22 @@ internal static class Program
                 return 0;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine(ex.Message);
             return 1;
         }
+    }
+
+    private static void EnableModernDialog(FolderBrowserDialog dialog)
+    {
+        // Available on newer WinForms; keep reflection so the helper still compiles on .NET Framework csc.
+        PropertyInfo autoUpgrade = typeof(FolderBrowserDialog).GetProperty("AutoUpgradeEnabled");
+        if (autoUpgrade != null && autoUpgrade.CanWrite)
+            autoUpgrade.SetValue(dialog, true, null);
+
+        PropertyInfo useDescriptionForTitle = typeof(FolderBrowserDialog).GetProperty("UseDescriptionForTitle");
+        if (useDescriptionForTitle != null && useDescriptionForTitle.CanWrite)
+            useDescriptionForTitle.SetValue(dialog, true, null);
     }
 }
