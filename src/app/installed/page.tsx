@@ -121,17 +121,28 @@ export default function InstalledPage() {
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-4xl font-bold uppercase tracking-tight md:text-5xl">My installed skills</h1>
             <InfoTip label="What install source means">
-              <strong className="font-bold uppercase text-on-background">Install source</strong> is our best guess at
-              who put each skill on disk.
+              <strong className="font-bold uppercase text-on-background">Install source</strong> tells you whether
+              <em> you</em> put the skill on disk or a coding-agent platform did.
               <br />
               <br />
-              If <code className="font-mono text-xs">SKILL.md</code> includes{" "}
-              <code className="font-mono text-xs">install_source</code> and{" "}
-              <code className="font-mono text-xs">installed_by</code>, we show that.
+              <strong>Installed By &lt;tool&gt;</strong> appears when:
+              <br />
+              1. <code className="font-mono text-xs">SKILL.md</code> declares{" "}
+              <code className="font-mono text-xs">install_source: agent_tool</code> +{" "}
+              <code className="font-mono text-xs">installed_by</code> (highest confidence), or
+              <br />
+              2. the skill folder lives inside a path the tool clearly owns — currently Codex&apos;s
+              <code className="font-mono text-xs"> .codex/skills/.system/</code> (bundled templates), or your
+              user-wide <code className="font-mono text-xs">~/.codex/skills/</code> (Codex&apos;s
+              <code className="font-mono text-xs"> skill-installer</code> writes here).
               <br />
               <br />
-              Otherwise we infer from the folder (e.g. under <code className="font-mono text-xs">.codex/skills</code> →
-              Codex). <strong>Manually installed</strong> means you placed it outside those tool-specific layouts.
+              <strong>Manually Installed</strong> is the default for everything else — including skills you
+              authored under <code className="font-mono text-xs">.cursor/skills</code>,{" "}
+              <code className="font-mono text-xs">.agent/skills</code>, or project-scope{" "}
+              <code className="font-mono text-xs">.codex/skills</code>. If a global Codex skill is actually
+              your hand-placed copy, set <code className="font-mono text-xs">install_source: manual</code> in
+              its SKILL.md to override.
             </InfoTip>
           </div>
           <p className="mt-2 w-full text-lg text-on-surface-variant">

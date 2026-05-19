@@ -276,3 +276,11 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 .skill-update-available {
   animation: skill-update-glow 2.4s ease-in-out infinite;
 }
+
+/* Global color crossfade for smoother theme transition */
+html.theme-color-transition,
+html.theme-color-transition *,
+html.theme-color-transition *::before,
+html.theme-color-transition *::after {
+  transition: background-color 0.8s ease-out, color 0.8s ease-out, border-color 0.8s ease-out, fill 0.8s ease-out, stroke 0.8s ease-out, box-shadow 0.8s ease-out;
+}

@@ -95,6 +95,7 @@ export async function readSkillDetail(skillMdPath: string): Promise<SkillDetail>
     skillPath: skillFolder,
     skillDirName,
     skillsRootRelative,
+    scope,
     compatibleAgentIds,
     parsed,
   });

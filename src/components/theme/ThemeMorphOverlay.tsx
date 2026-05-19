@@ -37,17 +37,27 @@ export function ThemeMorphOverlay() {
       }
 
       const id = ++runIdRef.current;
+      const isCurrentlyDark = document.documentElement.classList.contains("dark");
+      const currentBg = backgroundForScheme(isCurrentlyDark ? "dark" : "light");
       const targetBg = backgroundForScheme(scheme);
       const content = document.getElementById(THEME_CONTENT_ROOT_ID);
 
-      setFill(targetBg);
-      path.setAttribute("fill", targetBg);
+      // Start path at current background color to prevent popping
+      path.setAttribute("fill", currentBg);
       path.setAttribute("d", MORPH_PATH_FLAT);
       wrap.style.opacity = "1";
 
       document.documentElement.classList.add("theme-morph-active");
+      document.documentElement.classList.add("theme-color-transition");
       clearContentMorphClasses(content);
       content?.classList.add("theme-morph-content-dim");
+
+      // Force reflow so the browser registers the initial color before transitioning
+      void path.getBoundingClientRect();
+
+      // Set to target color, triggering the CSS fill transition (0.8s)
+      setFill(targetBg);
+      path.setAttribute("fill", targetBg);
 
       await animateSvgPath(path, MORPH_PATH_FLAT, MORPH_PATH_COVER, THEME_MORPH_SHOW_MS, easePower3InOut);
       if (id !== runIdRef.current) return;
@@ -70,6 +80,7 @@ export function ThemeMorphOverlay() {
       wrap.style.opacity = "1";
       clearContentMorphClasses(content);
       document.documentElement.classList.remove("theme-morph-active");
+      document.documentElement.classList.remove("theme-color-transition");
     };
 
     setThemeMorphRunner(run);

@@ -1,5 +1,5 @@
 import path from "path";
-import { getAgentName } from "@/lib/agents/registry";
+import { getAgentName, type SkillScope } from "@/lib/agents/registry";
 import type { ParsedSkill } from "@/lib/scanner/parse-skill";
 
 export type InstallOriginKind = "manual" | "agent" | "unknown";
@@ -7,7 +7,17 @@ export type InstallOriginKind = "manual" | "agent" | "unknown";
 export type InstallConfidence = "declared" | "high" | "medium" | "low";
 
 /**
- * Provenance for a skill folder. "agent" = we attribute installation/provisioning to a specific tool (best-effort).
+ * Provenance for a skill folder.
+ *
+ *   "agent"   — verified that a coding-agent platform put this skill on disk.
+ *               Either the SKILL.md author declared it, or the folder lives in
+ *               a place the tool clearly owns (bundled templates / the tool's
+ *               managed install home for user-wide skills).
+ *   "manual"  — default. The user (or someone helping them) placed the skill
+ *               there. The documented `.<tool>/skills` paths are user-authoring
+ *               conventions, not auto-install destinations, so we do *not*
+ *               attribute on directory name alone.
+ *   "unknown" — only used when the SKILL.md author explicitly declared it.
  */
 export type InstallOrigin = {
   kind: InstallOriginKind;
@@ -19,99 +29,115 @@ export type InstallOrigin = {
   confidence: InstallConfidence;
 };
 
-/** Codex/OpenAI documented template dirs under .codex/skills (see openai/skills, Codex docs). */
-const CODEX_TEMPLATE_DIRS = new Set([
-  "skill-creator",
-  "update-codex-instructions",
-]);
+// ---------------------------------------------------------------------------
+// Per-agent provisioning signals.
+//
+// Each agent can declare three kinds of evidence we'll use to tag a skill as
+// "Installed By <agent>" without an explicit frontmatter declaration:
+//
+//   bundled          – paths where the tool itself ships skills as part of
+//                      its install (e.g. Codex `.system/` templates).
+//                      Highest evidence.
+//
+//   managedGlobal    – the user-wide path the tool's own installer writes to
+//                      (e.g. `~/.codex/skills/` for `skill-installer`). Only
+//                      applies to scope=global; project copies are almost
+//                      always user-authored. Medium evidence.
+//
+//   installerGitRemotes – reserved for a future enrichment phase: if a skill
+//                      folder is a clone of one of these remotes, we can
+//                      bump confidence to high. Wiring is TODO once we
+//                      capture origin URLs in the git update cache.
+//
+// To support a new agent, append to AGENT_PROVISIONING_SIGNALS below. No
+// changes to the resolver are needed.
+// ---------------------------------------------------------------------------
 
-function normRel(p: string): string {
-  return p.replace(/\\/g, "/").toLowerCase();
-}
+type ProvisioningSignals = {
+  agentId: string;
+  bundled?: {
+    /** All markers must appear in the absolute path (case-insensitive). */
+    pathMarkers: string[];
+    rationale: string;
+  };
+  managedGlobal?: {
+    /** Relative path (under home) the tool's installer uses for global skills. */
+    relativePath: string;
+    rationale: string;
+  };
+  installerGitRemotes?: {
+    patterns: RegExp[];
+    rationale: string;
+  };
+};
 
-function pathContainsDotSystem(absPath: string): boolean {
-  const norm = absPath.replace(/\\/g, "/").toLowerCase();
-  return norm.includes("/.system/") || norm.endsWith("/.system");
-}
+const AGENT_PROVISIONING_SIGNALS: ProvisioningSignals[] = [
+  {
+    agentId: "codex",
+    bundled: {
+      pathMarkers: [".codex/skills", "/.system/"],
+      rationale:
+        "Located under `.codex/skills/.system/` — Codex's documented system folder for templates that ship with the install (see github.com/openai/skills).",
+    },
+    managedGlobal: {
+      relativePath: ".codex/skills",
+      rationale:
+        "Lives in the user-wide `~/.codex/skills` folder, where Codex's `skill-installer` deposits skills. Globally-installed Codex skills are very rarely placed by hand — they're added by Codex's own installer flow or `git clone` from openai/skills.",
+    },
+    installerGitRemotes: {
+      patterns: [/github\.com[/:]openai\/skills(?:\.git)?$/i],
+      rationale:
+        "Skill folder is a git clone of openai/skills — Codex's curated skill catalog.",
+    },
+  },
+  // Other agents intentionally have no entries yet. We've reviewed each
+  // platform's docs and only Codex currently auto-provisions skills. Add new
+  // entries here when a tool ships a skill-installer or bundles built-ins
+  // (Claude Code, Antigravity, Cursor, Copilot, Gemini CLI, etc.).
+];
 
-/** Single-primary-tool skill roots (first match wins). Shared dirs like `.agents/skills` are excluded. */
-const EXCLUSIVE_ROOT_RULES: {
+// ---------------------------------------------------------------------------
+// Path → primary owner mapping (used ONLY for the declared-but-unspecified
+// case: author wrote `install_source: agent_tool` without `installed_by`).
+// Never on its own promotes a skill to "Installed By X".
+// ---------------------------------------------------------------------------
+
+type PathOwnerRule = {
   test: (relNorm: string) => boolean;
   agentId: string;
   rationale: string;
-}[] = [
-  {
-    test: (r) => r.includes(".github/skills"),
-    agentId: "copilot",
-    rationale:
-      "GitHub documents agent skills under `.github/skills` for Copilot (see about-agent-skills).",
-  },
-  {
-    test: (r) => r.includes(".copilot/skills"),
-    agentId: "copilot",
-    rationale: "Microsoft documents global Copilot skills under `~/.copilot/skills`.",
-  },
-  {
-    test: (r) => r.includes(".codex/skills"),
-    agentId: "codex",
-    rationale:
-      "OpenAI documents Codex skills under `.codex/skills` and ships templates under `.system` (see codex/skills).",
-  },
-  {
-    test: (r) => r.includes(".gemini/skills"),
-    agentId: "gemini-cli",
-    rationale: "Gemini CLI docs use `.gemini/skills` for user skills.",
-  },
-  {
-    test: (r) => r.includes(".windsurf/skills"),
-    agentId: "windsurf",
-    rationale: "Windsurf docs reference `.windsurf/skills`.",
-  },
-  {
-    test: (r) => r.includes(".codeium/windsurf/skills"),
-    agentId: "windsurf",
-    rationale: "Windsurf global skills path under Codeium user config.",
-  },
-  {
-    test: (r) => r.includes(".kilo/skills"),
-    agentId: "kilo",
-    rationale: "Kilo Code documents `.kilo/skills`.",
-  },
-  {
-    test: (r) => r.includes(".hermes/skills"),
-    agentId: "hermes",
-    rationale: "Hermes documents `~/.hermes/skills`.",
-  },
-  {
-    test: (r) => r.includes(".agent/skills"),
-    agentId: "antigravity",
-    rationale: "Antigravity docs use `.agent/skills` in projects.",
-  },
-  {
-    test: (r) => r.includes(".opencode/skills") || r.includes(".config/opencode/skills"),
-    agentId: "opencode",
-    rationale: "OpenCode docs use `.opencode/skills` (project) or `~/.config/opencode/skills` (global).",
-  },
-  {
-    test: (r) => r.includes(".cursor/skills"),
-    agentId: "cursor",
-    rationale:
-      "Cursor documents project skill folders under `.cursor/skills`. Skills here are *usually* user- or team-authored; we only mark tool-provisioned when other strong signals match.",
-  },
+};
+
+const PATH_PRIMARY_OWNER_RULES: PathOwnerRule[] = [
+  { test: (r) => r.includes(".github/skills"), agentId: "copilot", rationale: "GitHub Copilot's documented project path is `.github/skills`." },
+  { test: (r) => r.includes(".copilot/skills"), agentId: "copilot", rationale: "GitHub Copilot's documented global path is `~/.copilot/skills`." },
+  { test: (r) => r.includes(".codex/skills"), agentId: "codex", rationale: "OpenAI Codex's documented path is `.codex/skills`." },
+  { test: (r) => r.includes(".gemini/skills"), agentId: "gemini-cli", rationale: "Gemini CLI's documented path is `.gemini/skills`." },
+  { test: (r) => r.includes(".windsurf/skills") || r.includes(".codeium/windsurf/skills"), agentId: "windsurf", rationale: "Windsurf's documented paths are `.windsurf/skills` and `~/.codeium/windsurf/skills`." },
+  { test: (r) => r.includes(".kilo/skills"), agentId: "kilo", rationale: "Kilo Code's documented path is `.kilo/skills`." },
+  { test: (r) => r.includes(".hermes/skills"), agentId: "hermes", rationale: "Hermes Agent's documented path is `~/.hermes/skills`." },
+  { test: (r) => r.includes(".agent/skills"), agentId: "antigravity", rationale: "Antigravity's documented project path is `.agent/skills`." },
+  { test: (r) => r.includes(".opencode/skills") || r.includes(".config/opencode/skills"), agentId: "opencode", rationale: "OpenCode's documented paths are `.opencode/skills` and `~/.config/opencode/skills`." },
 ];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function normPath(p: string): string {
+  return p.replace(/\\/g, "/").toLowerCase();
+}
 
 function installedBySummary(agentId: string): string {
   return `Installed By ${getAgentName(agentId)}`;
 }
 
-function manualOrigin(detail: string): InstallOrigin {
-  return {
-    kind: "manual",
-    summary: "Manually Installed",
-    detail,
-    source: "declared",
-    confidence: "declared",
-  };
+function manualOrigin(
+  detail: string,
+  source: "declared" | "heuristic",
+  confidence: InstallConfidence,
+): InstallOrigin {
+  return { kind: "manual", summary: "Manually Installed", detail, source, confidence };
 }
 
 function agentOrigin(
@@ -130,20 +156,55 @@ function agentOrigin(
   };
 }
 
+function inferPrimaryOwner(skillsRootRelative: string): PathOwnerRule | undefined {
+  const relNorm = normPath(skillsRootRelative);
+  return PATH_PRIMARY_OWNER_RULES.find((rule) => rule.test(relNorm));
+}
+
+function matchBundledSignal(absPathNorm: string): ProvisioningSignals | undefined {
+  return AGENT_PROVISIONING_SIGNALS.find((sig) => {
+    if (!sig.bundled) return false;
+    return sig.bundled.pathMarkers.every((marker) => absPathNorm.includes(marker.toLowerCase()));
+  });
+}
+
+function matchManagedGlobalSignal(
+  scope: SkillScope,
+  skillsRootRelativeNorm: string,
+  absPathNorm: string,
+): ProvisioningSignals | undefined {
+  if (scope !== "global") return undefined;
+  return AGENT_PROVISIONING_SIGNALS.find((sig) => {
+    if (!sig.managedGlobal) return false;
+    const target = normPath(sig.managedGlobal.relativePath);
+    // The skill must live in the tool's managed home but *not* inside that
+    // home's bundled subtree — bundled is a higher-confidence match handled
+    // separately above.
+    if (sig.bundled && sig.bundled.pathMarkers.every((m) => absPathNorm.includes(m.toLowerCase()))) {
+      return false;
+    }
+    return skillsRootRelativeNorm.includes(target);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Public entry point
+// ---------------------------------------------------------------------------
+
 export function resolveInstallOrigin(opts: {
   skillPath: string;
   skillDirName: string;
   skillsRootRelative: string;
+  scope: SkillScope;
   compatibleAgentIds: string[];
   parsed: ParsedSkill;
 }): InstallOrigin {
   const declared = opts.parsed.installSource;
   const explicitAgent = opts.parsed.installedByAgentId;
 
+  // 1. Author-declared provenance always wins.
   if (declared === "manual") {
-    return manualOrigin(
-      "Declared in SKILL.md (install_source: manual).",
-    );
+    return manualOrigin("Declared in SKILL.md (install_source: manual).", "declared", "declared");
   }
 
   if (declared === "agent_tool") {
@@ -155,11 +216,11 @@ export function resolveInstallOrigin(opts: {
         "declared",
       );
     }
-    const fromPath = inferExclusiveProvisionAgent(opts.skillsRootRelative);
-    if (fromPath && fromPath.agentId !== "cursor") {
+    const owner = inferPrimaryOwner(opts.skillsRootRelative);
+    if (owner && owner.agentId !== "cursor") {
       return agentOrigin(
-        fromPath.agentId,
-        `Declared as agent/tool install; attributed to ${getAgentName(fromPath.agentId)} from canonical skill path (${fromPath.rationale})`,
+        owner.agentId,
+        `Declared as agent_tool install; attributed to ${getAgentName(owner.agentId)} from canonical path (${owner.rationale}). Add installed_by to SKILL.md for a precise label.`,
         "declared",
         "medium",
       );
@@ -168,7 +229,7 @@ export function resolveInstallOrigin(opts: {
       kind: "agent",
       summary: "Installed By coding agent",
       detail:
-        "Declared in SKILL.md (install_source: agent_tool) without installed_by. Add installed_by: <agent id> (e.g. codex, cursor) for a precise label.",
+        "Declared in SKILL.md (install_source: agent_tool) without installed_by. Add installed_by: <agent id> (e.g. codex, cursor, copilot) for a precise label.",
       source: "declared",
       confidence: "low",
     };
@@ -184,93 +245,43 @@ export function resolveInstallOrigin(opts: {
     };
   }
 
-  const absPath = path.resolve(opts.skillPath);
-  const folder = opts.skillDirName.toLowerCase();
-  const relNorm = normRel(opts.skillsRootRelative);
-  const inCodexTree = relNorm.includes(".codex/skills");
+  // 2. No declaration — apply heuristics tier-by-tier.
+  const skillsRootRelativeNorm = normPath(opts.skillsRootRelative);
+  const absPathNorm = normPath(path.resolve(opts.skillPath));
 
-  if (pathContainsDotSystem(absPath) && inCodexTree) {
-    return agentOrigin(
-      "codex",
-      "Located under `.codex/skills/**/.system/**`, matching OpenAI’s documented layout for Codex / skill-creator templates.",
-      "heuristic",
-      "high",
-    );
+  // Tier A: bundled (tool ships this as part of its install)
+  const bundled = matchBundledSignal(absPathNorm);
+  if (bundled?.bundled) {
+    return agentOrigin(bundled.agentId, bundled.bundled.rationale, "heuristic", "high");
   }
 
-  if (inCodexTree && CODEX_TEMPLATE_DIRS.has(folder)) {
-    const hasCodex = opts.compatibleAgentIds.includes("codex");
+  // Tier B: managed-global (tool's own installer writes to this user-wide path)
+  const managed = matchManagedGlobalSignal(opts.scope, skillsRootRelativeNorm, absPathNorm);
+  if (managed?.managedGlobal) {
     return agentOrigin(
-      "codex",
-      hasCodex
-        ? `Folder “${opts.skillDirName}” under .codex/skills matches documented Codex CLI helper / template skill names.`
-        : `Folder “${opts.skillDirName}” under .codex/skills matches known Codex template names (Codex not in compatible agents list for this path — verify).`,
-      "heuristic",
-      hasCodex ? "high" : "medium",
-    );
-  }
-
-  const exclusive = inferExclusiveProvisionAgent(opts.skillsRootRelative);
-  if (exclusive?.agentId === "cursor" && relNorm.includes(".cursor/skills") && !pathContainsDotSystem(absPath)) {
-    return {
-      kind: "unknown",
-      summary: "Unknown origin",
-      detail:
-        "Under `.cursor/skills`, Cursor treats this as user or repo-managed content; we cannot tell manual vs generated without SKILL.md hints. Use install_source / installed_by to label it.",
-      source: "heuristic",
-      confidence: "low",
-    };
-  }
-
-  if (exclusive && exclusive.agentId !== "cursor") {
-    return agentOrigin(
-      exclusive.agentId,
-      `Under ${opts.skillsRootRelative}: ${exclusive.rationale} Typical installs land here via that tool’s workflow or docs; could still be a manual clone.`,
+      managed.agentId,
+      `${managed.managedGlobal.rationale} If you placed this here by hand, set install_source: manual in SKILL.md to override.`,
       "heuristic",
       "medium",
     );
   }
 
-  if (relNorm.includes(".agents/skills")) {
-    return {
-      kind: "unknown",
-      summary: "Unknown origin",
-      detail:
-        "`.agents/skills` is shared by several assistants. Add `install_source` and `installed_by` to SKILL.md to record provenance.",
-      source: "heuristic",
-      confidence: "low",
-    };
-  }
-
-  if (relNorm.includes(".claude/skills")) {
-    return {
-      kind: "unknown",
-      summary: "Unknown origin",
-      detail:
-        "Claude / IDE-compatible skills live here for multiple tools; we don’t infer the installer without frontmatter or `.system`-style markers.",
-      source: "heuristic",
-      confidence: "low",
-    };
-  }
-
-  return {
-    kind: "unknown",
-    summary: "Unknown origin",
-    detail:
-      "No strong signal. In SKILL.md frontmatter set install_source: manual | agent_tool | unknown, and for agent_tool optionally installed_by: codex | cursor | copilot | …",
-    source: "heuristic",
-    confidence: "low",
-  };
+  // Tier C: default — the user authored or copied it themselves.
+  const owner = inferPrimaryOwner(opts.skillsRootRelative);
+  const ownerHint = owner
+    ? ` This folder is ${getAgentName(owner.agentId)}'s documented skills location, but that path is a user-authoring convention — the tool doesn't auto-install skills there.`
+    : "";
+  return manualOrigin(
+    `No frontmatter declaration and no signal that a coding-agent platform provisioned this skill (e.g. a bundled template path or the tool's managed install home).${ownerHint} Set install_source: agent_tool + installed_by: <agent id> in SKILL.md if a tool actually placed it here.`,
+    "heuristic",
+    "medium",
+  );
 }
 
-function inferExclusiveProvisionAgent(skillsRootRelative: string):
-  | { agentId: string; rationale: string }
-  | undefined {
-  const relNorm = normRel(skillsRootRelative);
-  for (const rule of EXCLUSIVE_ROOT_RULES) {
-    if (rule.test(relNorm)) {
-      return { agentId: rule.agentId, rationale: rule.rationale };
-    }
-  }
-  return undefined;
-}
+// ---------------------------------------------------------------------------
+// Exports for future use (e.g. enriching install origin with git remote info).
+// ---------------------------------------------------------------------------
+
+export const __INTERNAL = {
+  AGENT_PROVISIONING_SIGNALS,
+};

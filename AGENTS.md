@@ -44,7 +44,11 @@ AgentSkillsHub/
 
 - User settings: `%USERPROFILE%\.agent-skills-hub\settings.json`
 - Watched projects + enabled agent IDs stored there
-- **`install_source` / `installed_by` in SKILL.md** — `install_source`: manual | agent_tool | unknown; `installed_by`: hub agent id (e.g. `codex`, `copilot`). Without these, **Install origin** uses doc-aligned path rules (per-tool roots in `skill-paths.ts`, Codex `.system/` templates, etc.). **Git updates:** if the skill folder is a clone with `origin`, GET `/api/installed` compares `HEAD` to `origin` (requires `git` on PATH, optional network). Results cached in `%USERPROFILE%\.agent-skills-hub\update-check-cache.json` (~4h TTL); use **Re-check git** to bypass cache.
+- **`install_source` / `installed_by` in SKILL.md** — `install_source`: manual | agent_tool | unknown; `installed_by`: hub agent id (e.g. `codex`, `copilot`). **Install origin** (`src/lib/skills/install-origin.ts`) labels a skill via three tiers driven by the `AGENT_PROVISIONING_SIGNALS` table — adding new agents is a single-record append:
+  1. **Declared** — SKILL.md frontmatter wins (highest confidence).
+  2. **Bundled path** — the folder lives in a place the tool ships into. Today only Codex `.codex/skills/.system/**`.
+  3. **Managed-global path** — scope = global *and* the folder is in the tool's documented installer home. Today only Codex `~/.codex/skills/` (where `skill-installer` writes; openai/skills remote also recorded as a future high-confidence signal). Project-scope copies stay **Manually Installed** since users almost always author per-project skills by hand.
+  Everything else defaults to **Manually Installed** with a hint to set `install_source: manual` if needed to override the managed-global heuristic. The user-authoring conventions (`.cursor/skills`, `.agent/skills`, project-scope `.codex/skills`, `.gemini/skills`, `.github/skills`, `.copilot/skills`, `.windsurf/skills`, `.kilo/skills`, `.opencode/skills`, `.hermes/skills`, `.agents/skills`, `.claude/skills`) never auto-promote to "Installed By X". **Git updates:** if the skill folder is a clone with `origin`, GET `/api/installed` compares `HEAD` to `origin` (requires `git` on PATH, optional network). Results cached in `%USERPROFILE%\.agent-skills-hub\update-check-cache.json` (~4h TTL); use **Re-check git** to bypass cache.
 ## Status
 
 - [x] Scaffold Next.js app
@@ -65,7 +69,7 @@ AgentSkillsHub/
 - [x] Skill detail route `/installed/skill/[key]` (base64url of SKILL.md path)
 - [x] Project skill library route `/installed/project/[key]` (per-watched-project cards)
 - [x] Collapsible global / project sections on Installed
-- [x] Install origin + git upstream hints (Manually Installed vs Installed By tool name, optional `installed_by`)
+- [x] Install origin + git upstream hints — tiered: declared frontmatter → bundled path → managed-global path (Codex `~/.codex/skills/` from `skill-installer`); per-agent signals table for extensibility
 - [x] Agent icons in `public/icons/agents/` (registry `iconFile`)
 - [ ] Skill discovery catalog
 - [ ] One-click install skills to correct paths

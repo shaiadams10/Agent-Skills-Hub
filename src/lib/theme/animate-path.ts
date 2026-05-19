@@ -1,4 +1,4 @@
-import { interpolate } from "flubber";
+import { mix } from "framer-motion";
 
 function waitFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
@@ -11,7 +11,7 @@ export function animateSvgPath(
   durationMs: number,
   ease: (t: number) => number,
 ): Promise<void> {
-  const blend = interpolate(fromD, toD, { maxSegmentLength: 12 });
+  const blend = mix(fromD, toD);
 
   return new Promise((resolve) => {
     const start = performance.now();
