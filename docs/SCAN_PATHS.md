@@ -2,6 +2,8 @@
 
 Paths in `src/lib/agents/skill-paths.ts` are aligned with official docs. Re-verify when vendors update documentation.
 
+**Periodic audit:** copy the ready-to-use agent prompt from [`PATH_AUDIT_PROMPT.md`](./PATH_AUDIT_PROMPT.md) (includes all doc URLs and the current registry baseline).
+
 | Relative path | Scope | Tools | Doc |
 |---------------|-------|-------|-----|
 | `.cursor/skills` | project, global | Cursor | [Cursor skills](https://cursor.com/docs/context/skills) |

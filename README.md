@@ -59,6 +59,7 @@ Planned **Windows installer (.exe/.msi)** and **macOS `.dmg`** for users who sho
 | [docs/INSTALL_PROMPT.md](./docs/INSTALL_PROMPT.md) | Copy-paste prompts for agents |
 | [AGENTS.md](./AGENTS.md) | Codebase map for contributors / agents |
 | [docs/SCAN_PATHS.md](./docs/SCAN_PATHS.md) | Skill directory paths per tool |
+| [docs/PATH_AUDIT_PROMPT.md](./docs/PATH_AUDIT_PROMPT.md) | Copy-paste prompt to audit paths vs official docs |
 | [docs/ROADMAP.md](./docs/ROADMAP.md) | Planned features |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Development & PR notes |
 | [SECURITY.md](./SECURITY.md) | Security & privacy notes |
