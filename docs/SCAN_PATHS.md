@@ -11,6 +11,10 @@ Paths in `src/lib/agents/skill-paths.ts` are aligned with official docs. Re-veri
 | `.github/skills` | project | GitHub Copilot | [Copilot agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) |
 | `.copilot/skills` | global | GitHub Copilot | same |
 | `.gemini/skills` | project, global | Gemini CLI, Antigravity | [Gemini CLI skills](https://geminicli.com/docs/cli/skills/) |
+| `.gemini/antigravity/skills` | global | Antigravity (Google) | [Antigravity skills setup](https://antigravity.codes/blog/antigravity-skills-setup-guide) |
+| `.gemini/antigravity-ide/skills` | global | Antigravity (Google) | [Antigravity codelab](https://codelabs.developers.google.com/getting-started-with-antigravity-skills) |
+| `.gemini/antigravity-backup/skills` | global | Antigravity (Google) | observed: IDE rotates skills between active / backup folders |
+| `.gemini/config/skills` | global | Antigravity (Google) | observed: IDE config-managed copy of installed skills |
 | `.windsurf/skills` | project | Windsurf | [Windsurf Cascade skills](https://docs.windsurf.com/windsurf/cascade/skills) |
 | `.codeium/windsurf/skills` | global | Windsurf | same |
 | `.kilo/skills` | project, global | Kilo Code | [Kilo skills](https://kilocode.ai/docs/customize/skills) |

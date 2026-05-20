@@ -61,8 +61,8 @@ type ProvisioningSignals = {
     rationale: string;
   };
   managedGlobal?: {
-    /** Relative path (under home) the tool's installer uses for global skills. */
-    relativePath: string;
+    /** Relative paths (under home) the tool's installer uses for global skills. */
+    relativePaths: string[];
     rationale: string;
   };
   installerGitRemotes?: {
@@ -80,7 +80,7 @@ const AGENT_PROVISIONING_SIGNALS: ProvisioningSignals[] = [
         "Located under `.codex/skills/.system/` — Codex's documented system folder for templates that ship with the install (see github.com/openai/skills).",
     },
     managedGlobal: {
-      relativePath: ".codex/skills",
+      relativePaths: [".codex/skills"],
       rationale:
         "Lives in the user-wide `~/.codex/skills` folder, where Codex's `skill-installer` deposits skills. Globally-installed Codex skills are very rarely placed by hand — they're added by Codex's own installer flow or `git clone` from openai/skills.",
     },
@@ -90,10 +90,35 @@ const AGENT_PROVISIONING_SIGNALS: ProvisioningSignals[] = [
         "Skill folder is a git clone of openai/skills — Codex's curated skill catalog.",
     },
   },
+  {
+    agentId: "antigravity",
+    managedGlobal: {
+      // The Antigravity IDE owns every subfolder of ~/.gemini/ except the
+      // bare `.gemini/skills` directory (that one is the Gemini CLI's user
+      // scope). The IDE rotates skills between active / backup / ide / config
+      // copies across versions; all four are seen in the wild.
+      relativePaths: [
+        ".gemini/antigravity/skills",
+        ".gemini/antigravity-ide/skills",
+        ".gemini/antigravity-backup/skills",
+        ".gemini/config/skills",
+      ],
+      rationale:
+        "Lives in a Google Antigravity IDE-managed folder under `~/.gemini/`. The IDE bundles a Gemini CLI fork that copies skills into these locations (`antigravity/skills` is the documented active path; `antigravity-ide`, `antigravity-backup`, and `config/skills` are observed sibling copies). They are not standard user-authoring locations.",
+    },
+  },
+  {
+    agentId: "gemini-cli",
+    managedGlobal: {
+      relativePaths: [".gemini/skills"],
+      rationale:
+        "Lives in the user-wide `~/.gemini/skills` folder, where `gemini skills install --scope user` deposits skills (see geminicli.com/docs/cli/skills). Skills here are typically installed by the CLI rather than authored by hand.",
+    },
+  },
   // Other agents intentionally have no entries yet. We've reviewed each
-  // platform's docs and only Codex currently auto-provisions skills. Add new
-  // entries here when a tool ships a skill-installer or bundles built-ins
-  // (Claude Code, Antigravity, Cursor, Copilot, Gemini CLI, etc.).
+  // platform's docs and only Codex / Antigravity / Gemini CLI currently
+  // auto-provision skills. Add new entries here when a tool ships a
+  // skill-installer or bundles built-ins (Claude Code, Cursor, Copilot, etc.).
 ];
 
 // ---------------------------------------------------------------------------
@@ -112,6 +137,11 @@ const PATH_PRIMARY_OWNER_RULES: PathOwnerRule[] = [
   { test: (r) => r.includes(".github/skills"), agentId: "copilot", rationale: "GitHub Copilot's documented project path is `.github/skills`." },
   { test: (r) => r.includes(".copilot/skills"), agentId: "copilot", rationale: "GitHub Copilot's documented global path is `~/.copilot/skills`." },
   { test: (r) => r.includes(".codex/skills"), agentId: "codex", rationale: "OpenAI Codex's documented path is `.codex/skills`." },
+  // Order matters: more specific Antigravity (and antigravity-* sibling) paths
+  // are checked before the generic `.gemini/skills` rule so the same `.gemini/`
+  // tree doesn't get mis-attributed to plain Gemini CLI.
+  { test: (r) => r.includes(".gemini/antigravity"), agentId: "antigravity", rationale: "Antigravity IDE's user-wide skills location under `~/.gemini/antigravity/` (and sibling `antigravity-ide` / `antigravity-backup` folders)." },
+  { test: (r) => r.includes(".gemini/config/skills"), agentId: "antigravity", rationale: "Antigravity IDE config-managed skills under `~/.gemini/config/skills`." },
   { test: (r) => r.includes(".gemini/skills"), agentId: "gemini-cli", rationale: "Gemini CLI's documented path is `.gemini/skills`." },
   { test: (r) => r.includes(".windsurf/skills") || r.includes(".codeium/windsurf/skills"), agentId: "windsurf", rationale: "Windsurf's documented paths are `.windsurf/skills` and `~/.codeium/windsurf/skills`." },
   { test: (r) => r.includes(".kilo/skills"), agentId: "kilo", rationale: "Kilo Code's documented path is `.kilo/skills`." },
@@ -176,14 +206,15 @@ function matchManagedGlobalSignal(
   if (scope !== "global") return undefined;
   return AGENT_PROVISIONING_SIGNALS.find((sig) => {
     if (!sig.managedGlobal) return false;
-    const target = normPath(sig.managedGlobal.relativePath);
     // The skill must live in the tool's managed home but *not* inside that
     // home's bundled subtree — bundled is a higher-confidence match handled
     // separately above.
     if (sig.bundled && sig.bundled.pathMarkers.every((m) => absPathNorm.includes(m.toLowerCase()))) {
       return false;
     }
-    return skillsRootRelativeNorm.includes(target);
+    return sig.managedGlobal.relativePaths.some((rel) =>
+      skillsRootRelativeNorm.includes(normPath(rel)),
+    );
   });
 }
 

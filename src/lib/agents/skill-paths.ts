@@ -138,6 +138,45 @@ export const CANONICAL_SKILL_PATHS: CanonicalSkillPath[] = [
     recursive: false,
     docUrl: "https://geminicli.com/docs/cli/skills/",
   },
+  // --- Antigravity IDE global skill roots (under ~/.gemini/) ---
+  // Antigravity ships as a fork of Gemini CLI and writes skills into several
+  // subfolders of ~/.gemini/. We've observed all four in the wild on the same
+  // install — the IDE rotates between them across versions / sessions.
+  {
+    id: "global-antigravity-skills",
+    scope: "global",
+    relativePath: ".gemini/antigravity/skills",
+    agentIds: ["antigravity"],
+    recursive: false,
+    docUrl: "https://antigravity.codes/blog/antigravity-skills-setup-guide",
+  },
+  {
+    id: "global-antigravity-ide-skills",
+    scope: "global",
+    relativePath: ".gemini/antigravity-ide/skills",
+    agentIds: ["antigravity"],
+    recursive: false,
+    docUrl:
+      "https://codelabs.developers.google.com/getting-started-with-antigravity-skills",
+  },
+  {
+    id: "global-antigravity-backup-skills",
+    scope: "global",
+    relativePath: ".gemini/antigravity-backup/skills",
+    agentIds: ["antigravity"],
+    recursive: false,
+    docUrl:
+      "https://codelabs.developers.google.com/getting-started-with-antigravity-skills",
+  },
+  {
+    id: "global-antigravity-config-skills",
+    scope: "global",
+    relativePath: ".gemini/config/skills",
+    agentIds: ["antigravity"],
+    recursive: false,
+    docUrl:
+      "https://codelabs.developers.google.com/getting-started-with-antigravity-skills",
+  },
   // --- Windsurf ---
   {
     id: "project-windsurf-skills",

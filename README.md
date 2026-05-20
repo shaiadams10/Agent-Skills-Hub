@@ -11,7 +11,7 @@ Copy a prompt from **[docs/INSTALL_PROMPT.md](./docs/INSTALL_PROMPT.md)** and gi
 **Example:**
 
 ```
-Install Agent Skills Hub from https://github.com/YOUR_USER/AgentSkillsHub.
+Install Agent Skills Hub from https://github.com/shaiadams10/AgentSkillsHub.
 
 Follow INSTALL.md for my operating system (detect Windows vs macOS yourself).
 Ensure every requirement is satisfied — especially Node.js 20+ — installing anything missing.
@@ -25,7 +25,7 @@ Full steps and troubleshooting: **[INSTALL.md](./INSTALL.md)**
 **Requirements:** Node.js 20+, Windows 10+ or macOS 12+
 
 ```bash
-git clone https://github.com/YOUR_USER/AgentSkillsHub
+git clone https://github.com/shaiadams10/AgentSkillsHub
 cd AgentSkillsHub
 npm install
 npm run dev

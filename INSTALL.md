@@ -12,7 +12,7 @@
 
 Clone the URL the user provides (example shape):
 
-`https://github.com/<owner>/AgentSkillsHub`
+`https://github.com/shaiadams10/AgentSkillsHub`
 
 If no URL is given, ask once for the GitHub repository link.
 

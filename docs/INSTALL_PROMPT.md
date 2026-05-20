@@ -1,13 +1,13 @@
 # Install prompt (copy for your AI agent)
 
-Replace `REPO_URL` with this repository’s GitHub URL.
+Repository: **https://github.com/shaiadams10/AgentSkillsHub**
 
 ---
 
 ## Short prompt
 
 ```
-Install Agent Skills Hub from REPO_URL.
+Install Agent Skills Hub from https://github.com/shaiadams10/AgentSkillsHub.
 
 Follow INSTALL.md for my operating system (detect Windows vs macOS yourself).
 Ensure every requirement is satisfied — especially Node.js 20+ — installing anything missing.
@@ -20,7 +20,7 @@ Then start the app and confirm http://localhost:3000 loads.
 
 ```
 I want to install Agent Skills Hub from:
-REPO_URL
+https://github.com/shaiadams10/AgentSkillsHub
 
 Please:
 1. Clone the repository.

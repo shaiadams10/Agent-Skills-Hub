@@ -16,6 +16,7 @@ export async function GET(request: Request) {
       global: result.global,
       projects: result.projects,
       scannedAt: new Date().toISOString(),
+      enabledAgentIds: settings.enabledAgentIds,
       updateCheckSummary: {
         checkedAt: new Date().toISOString(),
         gitSkillFolders: 0,
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
     global: enriched.global,
     projects: enriched.projects,
     scannedAt: new Date().toISOString(),
+    enabledAgentIds: settings.enabledAgentIds,
     updateCheckSummary: enriched.updateCheckSummary,
   });
 }

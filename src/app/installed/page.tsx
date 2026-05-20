@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SkillCard } from "@/components/SkillCard";
 import { ExpandableRevealGrid } from "@/components/motion/ExpandableRevealGrid";
 import { AddProjectModal } from "@/components/AddProjectModal";
@@ -9,6 +9,10 @@ import {
   INSTALLED_TOOLBAR_BTN,
   INSTALLED_TOOLBAR_GRID,
 } from "@/components/installed/installed-toolbar";
+import {
+  UnselectedAgentNotice,
+  type UnselectedAgentGroup,
+} from "@/components/installed/UnselectedAgentNotice";
 import { ProjectLibraryCard } from "@/components/ProjectLibraryCard";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
@@ -28,8 +32,54 @@ type ScanResult = {
   global: InstalledSkill[];
   projects: { path: string; label: string; skills: InstalledSkill[] }[];
   scannedAt: string;
+  enabledAgentIds?: string[];
   updateCheckSummary?: UpdateCheckSummary;
 };
+
+/**
+ * Groups skills by the assistant our origin resolver attributes them to,
+ * but only when that assistant is *not* in the user's Setup selection.
+ *
+ * Strict rules (compatibility is intentionally NOT considered):
+ *   • Skill must have a detected installer (`installOrigin.kind === "agent"`
+ *     with `installedByAgentId` set). Manual / unknown installs are excluded.
+ *   • Confidence must be `declared`, `high`, or `medium` — low-confidence
+ *     guesses are excluded so we don't nag the user about ambiguous cases.
+ *   • The installer agent must not be in `enabledAgentIds`.
+ *
+ * If the user hasn't selected any assistants (empty list = "all"), the banner
+ * is suppressed entirely.
+ */
+function groupUnselectedAgentSkills(
+  data: ScanResult | null,
+): UnselectedAgentGroup[] {
+  if (!data) return [];
+  const enabled = data.enabledAgentIds ?? [];
+  if (enabled.length === 0) return [];
+
+  const enabledSet = new Set(enabled);
+  const allSkills = [
+    ...data.global,
+    ...data.projects.flatMap((p) => p.skills),
+  ];
+
+  const byAgent = new Map<string, InstalledSkill[]>();
+  for (const skill of allSkills) {
+    const origin = skill.installOrigin;
+    if (origin.kind !== "agent") continue;
+    if (!origin.installedByAgentId) continue;
+    if (origin.confidence === "low") continue;
+    if (enabledSet.has(origin.installedByAgentId)) continue;
+
+    const list = byAgent.get(origin.installedByAgentId) ?? [];
+    list.push(skill);
+    byAgent.set(origin.installedByAgentId, list);
+  }
+
+  return [...byAgent.entries()]
+    .map(([agentId, skills]) => ({ agentId, skills }))
+    .sort((a, b) => b.skills.length - a.skills.length);
+}
 
 function ScanStatusLine({
   scannedAt,
@@ -114,6 +164,11 @@ export default function InstalledPage() {
 
   const summary = data?.updateCheckSummary;
 
+  const unselectedAgentGroups = useMemo(
+    () => groupUnselectedAgentSkills(data),
+    [data],
+  );
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 p-6 md:p-10">
       <div className="grid gap-6 border-b-[3px] border-on-background pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-8">
@@ -188,6 +243,10 @@ export default function InstalledPage() {
         <p className="py-16 text-center font-bold uppercase text-on-surface-variant">
           Scanning skills and checking git remotes…
         </p>
+      )}
+
+      {data && unselectedAgentGroups.length > 0 && (
+        <UnselectedAgentNotice groups={unselectedAgentGroups} />
       )}
 
       {data && (
