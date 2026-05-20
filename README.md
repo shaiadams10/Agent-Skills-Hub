@@ -51,6 +51,10 @@ npm start
 
 Planned **Windows installer (.exe/.msi)** and **macOS `.dmg`** for users who should not install Node — see **[docs/ROADMAP.md](./docs/ROADMAP.md)**.
 
+## Path audit prompt
+
+If a skill is missing, the hub may not scan that folder yet — see **[docs/SCAN_PATHS.md](./docs/SCAN_PATHS.md)** for what we check today. **[docs/PATH_AUDIT_PROMPT.md](./docs/PATH_AUDIT_PROMPT.md)** has a copy-paste prompt (with every supported assistant’s official doc links built in) for an AI agent to compare our paths to live vendor documentation and suggest fixes. No need to paste doc pages yourself.
+
 ## Docs
 
 | Doc | Purpose |
@@ -59,7 +63,7 @@ Planned **Windows installer (.exe/.msi)** and **macOS `.dmg`** for users who sho
 | [docs/INSTALL_PROMPT.md](./docs/INSTALL_PROMPT.md) | Copy-paste prompts for agents |
 | [AGENTS.md](./AGENTS.md) | Codebase map for contributors / agents |
 | [docs/SCAN_PATHS.md](./docs/SCAN_PATHS.md) | Skill directory paths per tool |
-| [docs/PATH_AUDIT_PROMPT.md](./docs/PATH_AUDIT_PROMPT.md) | Copy-paste prompt to audit paths vs official docs |
+| [docs/PATH_AUDIT_PROMPT.md](./docs/PATH_AUDIT_PROMPT.md) | Ready-to-use prompt when skills are missing or paths may be outdated |
 | [docs/ROADMAP.md](./docs/ROADMAP.md) | Planned features |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Development & PR notes |
 | [SECURITY.md](./SECURITY.md) | Security & privacy notes |
