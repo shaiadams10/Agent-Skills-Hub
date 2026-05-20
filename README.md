@@ -4,6 +4,19 @@ Local-only Next.js app to **scan and manage AI agent skill installs** (`SKILL.md
 
 Runs on **localhost** — it reads skill folders on your computer via the app server. Nothing is uploaded to the cloud.
 
+<p align="center">
+  <img src="docs/images/demo-home.png" alt="Agent Skills Hub home — neo-brutalist dashboard for all coding agents" width="720" />
+</p>
+<p align="center">
+  <em>Home — scan every supported tool from one local dashboard</em>
+</p>
+<p align="center">
+  <img src="docs/images/demo-installed.png" alt="Installed skills view — global and project SKILL.md installs with agent badges" width="720" />
+</p>
+<p align="center">
+  <em>Installed skills — global paths, watched projects, install origin, and git update hints</em>
+</p>
+
 ## Install with an AI agent (recommended)
 
 Copy a prompt from **[docs/INSTALL_PROMPT.md](./docs/INSTALL_PROMPT.md)** and give your coding agent (Cursor, Codex, Claude Code, etc.) this repository’s **GitHub URL**.
