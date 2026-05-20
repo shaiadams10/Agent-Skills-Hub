@@ -1,7 +1,4 @@
-import {
-  CANONICAL_SKILL_PATHS,
-  type CanonicalSkillPath,
-} from "@/lib/agents/skill-paths";
+import { CANONICAL_SKILL_PATHS } from "@/lib/agents/skill-paths";
 import type { SkillScope } from "@/lib/agents/registry";
 
 export type MergedSkillPath = {

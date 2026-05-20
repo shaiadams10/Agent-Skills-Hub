@@ -192,4 +192,4 @@ Depth via **physical offsets** and **tonal layering**, not soft blur.
 
 ## Theme transition
 
-Toggling light/dark runs a **Codrops-style SVG morph** ([morphing page transition](https://tympanus.net/codrops/2017/08/08/morphing-page-transition/)): a wave overlay in the *target* background color washes over the UI (~520ms), the theme swaps on `<html>` while covered, then the wave retreats (~520ms) as `#theme-content-root` scales back up. Path morphing uses `flubber`. Respects `prefers-reduced-motion` (instant swap).
+Toggling light/dark runs a **Codrops-style SVG morph** ([morphing page transition](https://tympanus.net/codrops/2017/08/08/morphing-page-transition/)): a wave overlay in the *target* background color washes over the UI (~520ms), the theme swaps on `<html>` while covered, then the wave retreats (~520ms) as `#theme-content-root` scales back up. Path animation uses sampled SVG path interpolation (`animateSvgPath`). Respects `prefers-reduced-motion` (instant swap).

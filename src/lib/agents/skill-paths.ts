@@ -250,60 +250,13 @@ export const CANONICAL_SKILL_PATHS: CanonicalSkillPath[] = [
   },
 ];
 
-export function getCanonicalPaths(scope: SkillScope): CanonicalSkillPath[] {
-  const seen = new Set<string>();
-  return CANONICAL_SKILL_PATHS.filter((p) => p.scope === scope).filter((p) => {
-    const key = p.relativePath.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-/** All agent IDs that use this relative path (merged across canonical entries). */
-export function getAgentIdsForRelativePath(
+/** Relative skill folder paths documented for an agent at a given scope. */
+export function getRelativePathsForAgent(
+  agentId: string,
   scope: SkillScope,
-  relativePath: string,
 ): string[] {
-  const norm = relativePath.replace(/\\/g, "/").toLowerCase();
-  const ids = new Set<string>();
-  for (const p of CANONICAL_SKILL_PATHS) {
-    if (p.scope === scope && p.relativePath.toLowerCase() === norm) {
-      p.agentIds.forEach((id) => ids.add(id));
-    }
-  }
-  return [...ids];
-}
-
-export function getCanonicalPathForSkillsRoot(
-  scope: SkillScope,
-  basePath: string,
-  skillsRoot: string,
-): { relativePath: string; agentIds: string[]; recursive: boolean } | null {
-  const rel = pathRelative(basePath, skillsRoot);
-  if (!rel) return null;
-  const matches = CANONICAL_SKILL_PATHS.filter(
-    (p) =>
-      p.scope === scope && p.relativePath.toLowerCase() === rel.toLowerCase(),
-  );
-  if (matches.length === 0) return null;
-  const agentIds = new Set<string>();
-  let recursive = false;
-  for (const m of matches) {
-    m.agentIds.forEach((id) => agentIds.add(id));
-    if (m.recursive) recursive = true;
-  }
-  return {
-    relativePath: matches[0].relativePath,
-    agentIds: [...agentIds],
-    recursive,
-  };
-}
-
-function pathRelative(base: string, target: string): string | null {
-  const b = base.replace(/\\/g, "/").replace(/\/$/, "");
-  const t = target.replace(/\\/g, "/").replace(/\/$/, "");
-  if (!t.toLowerCase().startsWith(b.toLowerCase())) return null;
-  const rest = t.slice(b.length).replace(/^\//, "");
-  return rest || null;
+  const rel = CANONICAL_SKILL_PATHS.filter(
+    (p) => p.scope === scope && p.agentIds.includes(agentId),
+  ).map((p) => p.relativePath);
+  return [...new Set(rel)].sort();
 }
