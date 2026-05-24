@@ -14,6 +14,7 @@ import {
   type UnselectedAgentGroup,
 } from "@/components/installed/UnselectedAgentNotice";
 import { ProjectLibraryCard } from "@/components/ProjectLibraryCard";
+import { MotionFade } from "@/components/motion/MotionFade";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import type { InstalledSkill } from "@/lib/scanner/skill-scanner";
@@ -233,11 +234,14 @@ export default function InstalledPage() {
         </div>
       </div>
 
-      {error && (
-        <p className="border-[3px] border-error bg-error-container px-4 py-4 font-bold uppercase text-error">
+      <MotionFade show={!!error}>
+        <p
+          role="alert"
+          className="border-[3px] border-error bg-error-container px-4 py-4 font-bold uppercase text-error"
+        >
           {error}
         </p>
-      )}
+      </MotionFade>
 
       {loading && !data && (
         <p className="py-16 text-center font-bold uppercase text-on-surface-variant">

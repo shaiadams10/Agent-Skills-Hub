@@ -27,14 +27,19 @@ Get-CimInstance Win32_Process -Filter "Name='node.exe'" | ForEach-Object {
     $stopped += $pid
 }
 
-# Port 3000 may still be held briefly by a child; retry once
+# Free port 3000 — stale Next/other node listeners cause "Cannot GET /" when the bat opens :3000
+# but the new dev server bound to :3001 instead.
 Start-Sleep -Milliseconds 400
 Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object {
     $pid = $_.OwningProcess
     if ($stopped -contains $pid) { return }
     $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$pid" -ErrorAction SilentlyContinue
-    if ($proc.CommandLine -and $proc.CommandLine -match $escapedRoot) {
-        Write-Host "  Stopping process still listening on :3000 (PID $pid)..."
+    $cmd = $proc.CommandLine
+    if (-not $cmd) { return }
+    $isProjectNext = $cmd -match $escapedRoot -and $cmd -match "next"
+    $isNodeNext = $proc.Name -eq "node.exe" -and $cmd -match "next(\.cmd)?(\s+)?dev"
+    if ($isProjectNext -or $isNodeNext) {
+        Write-Host "  Stopping process on :3000 (PID $pid)..."
         Stop-Process -Id $pid -Force
         $stopped += $pid
     }

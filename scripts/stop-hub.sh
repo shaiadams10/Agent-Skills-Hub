@@ -14,7 +14,7 @@ if command -v lsof >/dev/null 2>&1; then
   while read -r pid; do
     [[ -z "$pid" ]] && continue
     cmd="$(ps -p "$pid" -o command= 2>/dev/null || true)"
-    if [[ "$cmd" == *"$ROOT"* ]] && [[ "$cmd" == *"next"* ]]; then
+    if [[ "$cmd" == *"next"* ]] && { [[ "$cmd" == *"$ROOT"* ]] || [[ "$cmd" == *"next dev"* ]]; }; then
       stop_pid "$pid"
     fi
   done < <(lsof -ti:3000 -sTCP:LISTEN 2>/dev/null || true)

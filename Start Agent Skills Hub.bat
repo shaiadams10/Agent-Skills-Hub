@@ -37,12 +37,11 @@ if not exist "src\lib\dialog\bin\pick-folder-win.exe" (
     )
 )
 
-echo  Opening in your browser...
-start "" "http://localhost:3000"
-
-echo  Keep this window open while using the app.
-echo  Press Ctrl+C to stop.
+echo  Starting dev server ^(http://localhost:3000^)...
+echo  Browser opens when ready. Keep this window open; Ctrl+C to stop.
 echo.
+
+start /B "" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\open-hub-when-ready.ps1" -Port 3000
 
 call npm run dev
 

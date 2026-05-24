@@ -22,6 +22,9 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
   { id: "opencode", name: "OpenCode", iconFile: "opencode.svg", docsUrl: "https://opencode.ai/docs/skills/" },
 ];
 
+/** Coding assistants shown on Setup. */
+export const SETUP_AGENT_REGISTRY = AGENT_REGISTRY;
+
 const byId = new Map(AGENT_REGISTRY.map((a) => [a.id, a]));
 
 export const KNOWN_AGENT_IDS = new Set(AGENT_REGISTRY.map((a) => a.id));

@@ -22,11 +22,10 @@ if [ ! -d "node_modules" ]; then
   npm install || { read -r -p "Press Enter to close..."; exit 1; }
 fi
 
-echo "  Opening http://localhost:3000 in your browser..."
-open "http://localhost:3000" 2>/dev/null || true
-
-echo "  Keep this window open while using the app."
-echo "  Press Ctrl+C to stop."
+echo "  Starting dev server (http://localhost:3000)..."
+echo "  Browser opens when ready. Keep this window open; Ctrl+C to stop."
 echo ""
+
+bash "$(dirname "$0")/scripts/open-hub-when-ready.sh" 3000 &
 
 npm run dev

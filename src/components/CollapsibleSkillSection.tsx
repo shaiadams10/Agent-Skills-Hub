@@ -1,7 +1,9 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
-import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { MotionChevron } from "@/components/motion/MotionChevron";
+import { MotionCollapse } from "@/components/motion/MotionCollapse";
+import { brutalPressSm } from "@/lib/motion/css";
 
 export function CollapsibleSkillSection({
   title,
@@ -36,29 +38,15 @@ export function CollapsibleSkillSection({
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-2 border-[3px] border-on-background bg-surface-container-lowest px-4 py-2 text-xs font-bold uppercase shadow-brutal transition-all hover:bg-primary-container active:translate-x-0.5 active:translate-y-0.5 active:shadow-none motion-reduce:hover:bg-surface-container-lowest"
+          className={`inline-flex items-center gap-2 border-[3px] border-on-background bg-surface-container-lowest px-4 py-2 text-xs font-bold uppercase shadow-brutal hover:bg-primary-container motion-reduce:hover:bg-surface-container-lowest ${brutalPressSm}`}
         >
-          <MaterialIcon
-            name="expand_more"
-            className={`transition-transform duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
-          />
+          <MotionChevron open={open} />
           {open ? "Hide" : "Show"}
         </button>
       </div>
-      <div
-        id={panelId}
-        role="region"
-        aria-labelledby={buttonId}
-        className={`grid overflow-hidden transition-[grid-template-rows] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none motion-reduce:duration-0 ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="min-h-0">
-          <div className={!open ? "pointer-events-none select-none" : undefined} aria-hidden={!open}>
-            {children}
-          </div>
-        </div>
-      </div>
+      <MotionCollapse id={panelId} open={open}>
+        {children}
+      </MotionCollapse>
     </section>
   );
 }

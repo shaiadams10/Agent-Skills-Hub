@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AgentIcon } from "@/components/AgentIcon";
+import { MotionCollapse } from "@/components/motion/MotionCollapse";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { brutalPressSm } from "@/lib/motion/css";
 import { getAgentName } from "@/lib/agents/registry";
 import type { InstalledSkill } from "@/lib/scanner/skill-scanner";
 
@@ -86,7 +88,7 @@ export function UnselectedAgentNotice({
           onClick={toggle}
           aria-expanded={!collapsed}
           aria-controls="unselected-agent-notice-body"
-          className="inline-flex items-center gap-1.5 border-[3px] border-on-background bg-surface-container-lowest px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-on-background shadow-brutal-sm transition-all hover:bg-primary-container active:translate-x-px active:translate-y-px active:shadow-none"
+          className={`inline-flex items-center gap-1.5 border-[3px] border-on-background bg-surface-container-lowest px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-on-background shadow-brutal-sm hover:bg-primary-container ${brutalPressSm}`}
         >
           <MaterialIcon
             name={collapsed ? "expand_more" : "expand_less"}
@@ -96,7 +98,7 @@ export function UnselectedAgentNotice({
         </button>
       </header>
 
-      {!collapsed && (
+      <MotionCollapse open={!collapsed}>
         <div
           id="unselected-agent-notice-body"
           className="border-t-[3px] border-on-background/30 px-5 pb-4 pt-3"
@@ -124,7 +126,7 @@ export function UnselectedAgentNotice({
             ))}
           </ul>
         </div>
-      )}
+      </MotionCollapse>
     </section>
   );
 }

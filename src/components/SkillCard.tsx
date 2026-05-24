@@ -8,6 +8,8 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { encodeSkillPathKey } from "@/lib/skills/skill-path-key";
 import { InstallOriginBadge } from "@/components/InstallOriginBadge";
 import { ReadMoreReveal } from "@/components/motion/ReadMoreReveal";
+import { BrutalModal } from "@/components/ui/BrutalModal";
+import { brutalLift, brutalPressSm } from "@/lib/motion/css";
 
 const SKILL_ICONS = [
   "auto_awesome",
@@ -73,7 +75,7 @@ export function SkillCard({
 
   return (
     <article
-      className={`relative flex w-full min-h-[22rem] flex-col self-start border-[3px] border-on-background bg-surface-container-lowest shadow-brutal transition-all hover:-translate-y-1 hover:shadow-brutal-hover md:min-h-[24rem] ${
+      className={`relative flex w-full min-h-[22rem] flex-col self-start border-[3px] border-on-background bg-surface-container-lowest shadow-brutal md:min-h-[24rem] ${brutalLift} ${
         hasUpdate ? "skill-update-available" : ""
       }`}
     >
@@ -178,49 +180,51 @@ export function SkillCard({
         )}
       </div>
 
-      {confirmOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center border-[3px] border-transparent bg-on-background/30 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-md border-[3px] border-on-background bg-surface-container-lowest p-8 shadow-brutal-lg">
-            <h4 className="text-xl font-bold uppercase text-primary">Remove this skill?</h4>
-            <p className="mt-3 text-on-surface-variant">
-              <strong className="uppercase text-on-background">{skill.parsed.name}</strong> will be deleted from disk.
-              This cannot be undone.
-            </p>
-            <p className="mt-2 break-all font-mono text-xs text-on-surface-variant">{skill.skillPath}</p>
-            {error && <p className="mt-2 text-sm font-bold uppercase text-error">{error}</p>}
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={() => {
-                  setConfirmOpen(false);
-                  setError(null);
-                }}
-                className="flex-1 border-[3px] border-on-background py-3 font-bold uppercase shadow-brutal transition-opacity hover:opacity-90"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={handleDelete}
-                className="flex flex-1 items-center justify-center gap-2 border-[3px] border-on-background bg-error py-3 font-bold uppercase text-on-error shadow-brutal disabled:opacity-50"
-              >
-                {deleting ? (
-                  <MaterialIcon name="progress_activity" className="animate-spin" />
-                ) : (
-                  <MaterialIcon name="delete" />
-                )}
-                Remove
-              </button>
-            </div>
+      <BrutalModal
+        open={confirmOpen}
+        onClose={() => {
+          if (!deleting) {
+            setConfirmOpen(false);
+            setError(null);
+          }
+        }}
+        title="Remove this skill?"
+      >
+        <div className="p-6 sm:p-8">
+          <p className="text-on-surface-variant">
+            <strong className="uppercase text-on-background">{skill.parsed.name}</strong> will be deleted from
+            disk. This cannot be undone.
+          </p>
+          <p className="mt-2 break-all font-mono text-xs text-on-surface-variant">{skill.skillPath}</p>
+          {error && <p className="mt-2 text-sm font-bold uppercase text-error">{error}</p>}
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => {
+                setConfirmOpen(false);
+                setError(null);
+              }}
+              className={`flex-1 border-[3px] border-on-background py-3 font-bold uppercase shadow-brutal hover:opacity-90 ${brutalPressSm}`}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={handleDelete}
+              className={`flex flex-1 items-center justify-center gap-2 border-[3px] border-on-background bg-error py-3 font-bold uppercase text-on-error shadow-brutal disabled:opacity-50 ${brutalPressSm}`}
+            >
+              {deleting ? (
+                <MaterialIcon name="progress_activity" className="animate-spin" />
+              ) : (
+                <MaterialIcon name="delete" />
+              )}
+              Remove
+            </button>
           </div>
         </div>
-      )}
+      </BrutalModal>
     </article>
   );
 }

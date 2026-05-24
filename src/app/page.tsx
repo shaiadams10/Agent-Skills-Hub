@@ -29,7 +29,7 @@ export default function HomePage() {
               href="/installed"
               className="border-[3px] border-on-background bg-primary px-6 py-3 text-sm font-bold uppercase text-on-primary shadow-brutal transition-all hover:bg-primary-container hover:text-on-primary-container active:translate-x-1 active:translate-y-1 active:shadow-none"
             >
-              View my installed skills
+              My installed skills
             </Link>
             <Link
               href="/setup"
@@ -64,7 +64,7 @@ export default function HomePage() {
             System modules
           </h3>
         </div>
-        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
           <SystemModuleCard
             title="Project skills"
             headerClassName="bg-primary-fixed"

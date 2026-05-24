@@ -1,11 +1,15 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { motionTransition } from "@/lib/motion/presets";
+import { MOTION_DURATION, MOTION_EASE_OUT } from "@/lib/motion/tokens";
+import { useMotionPrefs } from "@/lib/motion/reduced-motion";
 
-const EASE_OUT = [0.22, 1, 0.36, 1] as const;
-const TWEEN = { duration: 0.34, ease: EASE_OUT };
-
+/**
+ * Expands short description text. Uses height animation (layout) — acceptable for
+ * small blocks only; prefer MotionCollapse for large panels.
+ */
 export function ReadMoreReveal({
   show,
   children,
@@ -15,7 +19,9 @@ export function ReadMoreReveal({
   children: ReactNode;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
+  const { reduced } = useMotionPrefs();
+  const opacityTween = motionTransition(MOTION_DURATION.normal, MOTION_EASE_OUT, reduced);
+  const heightTween = motionTransition(MOTION_DURATION.moderate, MOTION_EASE_OUT, reduced);
 
   return (
     <AnimatePresence initial={false} mode="wait">
@@ -24,16 +30,13 @@ export function ReadMoreReveal({
           key="reveal"
           className={className}
           style={{ transformOrigin: "top center", overflow: "hidden" }}
-          initial={reduce ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+          initial={reduced ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          exit={reduce ? { opacity: 0, height: 0 } : { opacity: 0, height: 0 }}
+          exit={{ opacity: 0, height: 0 }}
           transition={
-            reduce
-              ? { duration: 0.12 }
-              : {
-                  opacity: TWEEN,
-                  height: { duration: 0.36, ease: EASE_OUT },
-                }
+            reduced
+              ? { duration: MOTION_DURATION.instant }
+              : { opacity: opacityTween, height: heightTween }
           }
         >
           {children}

@@ -60,6 +60,13 @@
   --radius-default: 0.25rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+
+  /* Motion tokens (see docs/MOTION.md, src/lib/motion/tokens.ts) */
+  --ease-motion-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-motion-in: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-motion-fast: 180ms;
+  --duration-motion-normal: 300ms;
+  --duration-motion-section: 600ms;
 }
 
 @utility shadow-brutal {

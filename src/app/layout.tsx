@@ -13,7 +13,7 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   title: "Agent Skills Hub",
-  description: "Manage and discover AI agent skills in one place",
+  description: "Manage AI agent skills installed on your machine",
 };
 
 export default function RootLayout({

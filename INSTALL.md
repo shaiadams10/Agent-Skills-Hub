@@ -142,6 +142,7 @@ Tell the user:
 | `node` not found | Install Node 20+ LTS; restart terminal. |
 | `npm install` fails | Check network; delete `node_modules` and retry; ensure Node 20+. |
 | Port 3000 in use | Stop other process or run `npm run dev -- -p 3001` and open that port. |
+| `npm run build` → `EPERM` / `Application Data` (Windows) | Repo on a **different drive** than your user profile (e.g. `D:\Projects\...` with profile on `C:`). Use `npm run build` (wrapper in `scripts/next-build.mjs`), or clone to `C:\Projects\...`, or run `set HOME=%CD%` and `set USERPROFILE=%CD%` before `npx next build`. |
 | Windows Browse shows error | Run `npm run build:picker`; ensure `pick-folder-win.exe` exists. |
 | Mac Browse does nothing | Use **paste path** in Add project; confirm `osascript` runs. |
 | SmartScreen blocks `.exe` | User may need “More info” → “Run anyway” for the picker once (dev builds). |

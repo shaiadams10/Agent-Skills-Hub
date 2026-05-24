@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { MotionFade } from "@/components/motion/MotionFade";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { brutalColorHover, brutalPressSm } from "@/lib/motion/css";
 
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/installed", label: "My installed skills" },
   { href: "/setup", label: "Setup" },
-  { href: "#", label: "Discover", soon: true },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -22,24 +23,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
   const navLinks = NAV.map((item) => {
-    if ("soon" in item && item.soon) {
-      return (
-        <span
-          key={item.label}
-          className="cursor-not-allowed border-b-[3px] border-transparent pb-1 text-sm font-bold uppercase tracking-tight text-on-surface-variant opacity-50"
-          title="Coming soon"
-        >
-          {item.label}
-        </span>
-      );
-    }
     const active = isActive(item.href);
     return (
       <Link
         key={item.href}
         href={item.href}
         onClick={() => setMobileOpen(false)}
-        className={`border-b-[3px] pb-1 text-sm font-bold uppercase tracking-tight transition-colors ${
+        className={`border-b-[3px] pb-1 text-sm font-bold uppercase tracking-tight ${brutalColorHover} ${
           active
             ? "border-primary text-primary"
             : "border-transparent text-on-surface-variant hover:bg-primary-container hover:text-on-surface"
@@ -59,14 +49,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Link
         href="/setup"
         aria-label="Settings"
-        className="flex items-center justify-center border-[3px] border-on-background p-2 shadow-brutal-sm transition-all hover:bg-primary-container active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        className={`flex items-center justify-center border-[3px] border-on-background p-2 shadow-brutal-sm hover:bg-primary-container ${brutalPressSm}`}
       >
         <MaterialIcon name="settings" />
       </Link>
       <Link
         href="/installed"
         aria-label="Sync skills"
-        className="flex items-center justify-center border-[3px] border-on-background p-2 shadow-brutal-sm transition-all hover:bg-primary-container active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+        className={`flex items-center justify-center border-[3px] border-on-background p-2 shadow-brutal-sm hover:bg-primary-container ${brutalPressSm}`}
       >
         <MaterialIcon name="sync" />
       </Link>
@@ -100,20 +90,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {mobileOpen && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-40 bg-on-background/20 md:hidden"
-            aria-hidden
-            onClick={() => setMobileOpen(false)}
-          />
-          <nav className="fixed inset-x-0 top-20 z-50 flex flex-col gap-4 border-b-[3px] border-on-background bg-surface-container-lowest p-6 shadow-brutal md:hidden">
-            {navLinks}
-            <div className="border-t-[3px] border-on-background pt-4">{headerButtons}</div>
-          </nav>
-        </>
-      )}
+      <MotionFade show={mobileOpen} mode="sync">
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-on-background/30 md:hidden"
+          aria-hidden
+          onClick={() => setMobileOpen(false)}
+        />
+      </MotionFade>
+      <MotionFade show={mobileOpen} slide className="fixed inset-x-0 top-20 z-50 md:hidden">
+        <nav className="flex flex-col gap-4 border-b-[3px] border-on-background bg-surface-container-lowest p-6 shadow-brutal">
+          {navLinks}
+          <div className="border-t-[3px] border-on-background pt-4">{headerButtons}</div>
+        </nav>
+      </MotionFade>
 
       <main className="flex flex-1 flex-col">{children}</main>
       <AppFooter />

@@ -19,8 +19,6 @@ Likely approach for desktop installers: lightweight shell (e.g. Tauri) + Next.js
 
 | Item | Status |
 |------|--------|
-| Skill discovery catalog | Planned |
-| One-click install skills to correct tool paths | Planned |
 | Auto-update for git-based skills | Partial (manual re-check) |
 
 ## Docs
